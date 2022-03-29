@@ -728,9 +728,10 @@ MonoBehaviour:
   actionSet:
     actionSetPath: /actions/default
   moveAction:
-    actionPath: /actions/platformer/in/Move
+    actionPath: /actions/default/in/TouchpadPosition
     needsReinit: 0
   hand: 2
+  minRadius: 0
 --- !u!1001 &1969426222
 PrefabInstance:
   m_ObjectHideFlags: 0
