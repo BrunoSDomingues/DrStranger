@@ -3,7 +3,7 @@ using Valve.VR;
 
 public class CreateShield : MonoBehaviour
 {
-
+    // SteamVR
     public SteamVR_Action_Boolean button = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     SteamVR_Behaviour_Pose trackedObj;
     public SteamVR_ActionSet actionSet;
@@ -20,6 +20,12 @@ public class CreateShield : MonoBehaviour
     private Vector2 startPos;
     private float startAngle = 0f, curAngle;
     public float minRadius;
+
+    // PREFAB
+    public GameObject prefab;
+    public Rigidbody attachPoint;
+    FixedJoint joint = null;
+
 
 
     private void Awake()
@@ -39,8 +45,17 @@ public class CreateShield : MonoBehaviour
     {
         buttonIsPressed = button.GetState(trackedObj.inputSource);   
 
-        if (buttonIsPressed && !success)
+        if (buttonIsPressed && !success && !failed)
         {
+            if (joint != null && (!success || failed))
+            {
+                Debug.Log("Destruindo escudo previo...");
+                GameObject shield = joint.gameObject;
+                Destroy(shield);
+                DestroyImmediate(joint);
+                joint = null;
+            }
+
             Vector2 m = moveAction[hand].axis;
 
             // Stores the starting position of the circle
@@ -52,22 +67,22 @@ public class CreateShield : MonoBehaviour
             if (radius > minRadius)
             {
                 // Calculates angle between starting and current position
-                curAngle = Mathf.Round(Vector2.SignedAngle(startPos, m) * (-100f))/100f;
-                curAngle = (curAngle > 0) ? curAngle : curAngle + 360f;
 
+                curAngle = Mathf.Round(Vector2.SignedAngle(startPos, m) * (-100f))/100f;
+                curAngle = (curAngle >= 0) ? curAngle : curAngle + 360f;
                 if (Mathf.Abs(curAngle - startAngle) >= 4)
                 {
-                    Debug.Log("SAIU");
+                    Debug.Log("Erro: diferenca de angulos = " + Mathf.Abs(curAngle - startAngle));
                     failed = true;
                 }
 
                 else
                 {
-                    Debug.Log("OK");
+                    Debug.Log("Direcao certa!");
 
                     if (curAngle >= 358)
                     {
-                        Debug.Log("COMPLETE CIRCLE");
+                        Debug.Log("Escudo completo!");
                         success = true;
                     }
 
@@ -76,7 +91,7 @@ public class CreateShield : MonoBehaviour
             }
             else
             {
-                Debug.Log("OUTSIDE THE DEFINED RADIUS!");
+                Debug.Log("Erro: raio do circulo muito pequeno!");
                 failed = true;
             }
 
@@ -85,6 +100,20 @@ public class CreateShield : MonoBehaviour
         {
             if (button.GetStateUp(trackedObj.inputSource))
             {
+                if (success && !failed)
+                {
+                    if (joint == null)
+                    {
+                        Debug.Log("Criando escudo...");
+                        GameObject shield = GameObject.Instantiate(prefab);
+                        shield.transform.position = attachPoint.transform.position;
+
+                        joint = shield.AddComponent<FixedJoint>();
+                        joint.connectedBody = attachPoint;
+                        Debug.Log("Escudo criado!");
+                    }
+                }
+                Debug.Log("Resetando parametros...");
                 storeStart = true;
                 success = false;
                 failed = false;
