@@ -10,22 +10,16 @@ public class CreateShield : MonoBehaviour
     public SteamVR_Action_Vector2 moveAction;
     public SteamVR_Input_Sources hand;
 
-    // CHECK IF FAILED
+    // FLAGS
+    private bool success = false;
     private bool failed = false;
-
-    // RADIUS
-    public float minRadius;
-    
-    // BUTTONS
     private bool buttonIsPressed = false;
-    
-    // POSITION
-    private Vector2 startPos;
     private bool storeStart = true;
 
-    // CIRCLE
-    [Range(0, 360)]private float angle;
-    private bool halfCross = false;
+    // VALUES
+    private Vector2 startPos;
+    private float startAngle = 0f, curAngle;
+    public float minRadius;
 
 
     private void Awake()
@@ -45,7 +39,7 @@ public class CreateShield : MonoBehaviour
     {
         buttonIsPressed = button.GetState(trackedObj.inputSource);   
 
-        if (buttonIsPressed && !failed)
+        if (buttonIsPressed && !success)
         {
             Vector2 m = moveAction[hand].axis;
 
@@ -58,42 +52,33 @@ public class CreateShield : MonoBehaviour
             if (radius > minRadius)
             {
                 // Calculates angle between starting and current position
-                angle = Mathf.Ceil(Vector2.SignedAngle(startPos, m) * -1.0f);        
-                
-                // TO DO
+                curAngle = Mathf.Round(Vector2.SignedAngle(startPos, m) * (-100f))/100f;
+                curAngle = (curAngle > 0) ? curAngle : curAngle + 360f;
 
-                // Criar 4 estados
-                // Estado 1: -2 < angulo < 178 e halfCross = false;
-                // Estado 2: angulo >= 178 -> halfCross = true;
-                // Estado 3: -2 > angulo > -178 e halfCross = true;
-                // Estado 4: -2 < angulo -> completa o circulo;
+                if (Mathf.Abs(curAngle - startAngle) >= 4)
+                {
+                    Debug.Log("SAIU");
+                    failed = true;
+                }
 
-                // 1 -> 2 -> 3 -> 4
-                // NAO PODE QUEBRAR A ORDEM
+                else
+                {
+                    Debug.Log("OK");
 
-                // OLD CODE
+                    if (curAngle >= 358)
+                    {
+                        Debug.Log("COMPLETE CIRCLE");
+                        success = true;
+                    }
 
-                //Debug.Log("ANGLE: " + angle + ", CROSSED :" + halfCross);
-
-                //if ((!halfCross && angle < -2) || (halfCross && angle < 178))
-                //{
-                //    Debug.Log("ERROR: CROSS IS " + halfCross + ", ANGLE IS " + angle);
-                //    failed = true;
-                //}
-                //else
-                //{
-                //    Debug.Log("OK");
-                //    if (Mathf.Round(angle) >= 178) halfCross = true;
-                //    if (Mathf.Round(angle) <= -177 && halfCross) Debug.Log("COMPLETE CIRCLE!");
-                //}
-
-
-
-
-                //Debug.Log("INVALID ANGLE!");
-                //Debug.Log("Angle between start (" + startPos.x.ToString("F2") + "; " + startPos.y.ToString("F2") + ") and current (" + m.x.ToString("F2") + "; " + m.y.ToString("F2") + ") is " + angle.ToString("F2"));
+                    startAngle = curAngle;
+                }
             }
-            else Debug.Log("OUTSIDE THE DEFINED RADIUS!");
+            else
+            {
+                Debug.Log("OUTSIDE THE DEFINED RADIUS!");
+                failed = true;
+            }
 
         }
         else
@@ -101,8 +86,9 @@ public class CreateShield : MonoBehaviour
             if (button.GetStateUp(trackedObj.inputSource))
             {
                 storeStart = true;
+                success = false;
                 failed = false;
-                halfCross = false;
+                startAngle = 0f;
             }
         }
             
