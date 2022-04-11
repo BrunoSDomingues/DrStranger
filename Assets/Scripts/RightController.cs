@@ -1,7 +1,7 @@
 using UnityEngine;
 using Valve.VR;
 
-public class CreateShield : MonoBehaviour
+public class RightController : MonoBehaviour
 {
     // SteamVR
     public SteamVR_Action_Boolean button = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
@@ -18,15 +18,12 @@ public class CreateShield : MonoBehaviour
 
     // VALUES
     private Vector2 startPos;
-    private float startAngle = 0f, curAngle;
-    public float minRadius;
+    private float startAngle = 0f, curAngle, maxAngleDiff = 7f;
+    private float minRadius;
 
     // PREFAB
     public GameObject prefab;
-    public Rigidbody attachPoint;
-    FixedJoint joint = null;
-
-
+    public GameObject attachPoint;
 
     private void Awake()
     {
@@ -35,7 +32,7 @@ public class CreateShield : MonoBehaviour
 
     private void Start()
     {
-        minRadius = 0.6f;
+        minRadius = 0.5f;
         actionSet.Activate(hand);
     }
 
@@ -47,13 +44,14 @@ public class CreateShield : MonoBehaviour
 
         if (buttonIsPressed && !success && !failed)
         {
-            if (joint != null && (!success || failed))
+            if (!success || failed)
             {
-                Debug.Log("Destruindo escudo previo...");
-                GameObject shield = joint.gameObject;
-                Destroy(shield);
-                DestroyImmediate(joint);
-                joint = null;
+                GameObject shield = GameObject.FindWithTag("Shield");
+                if (shield != null)
+                {
+                    Destroy(shield);
+                    Debug.Log("Destruindo escudo previo...");
+                }
             }
 
             Vector2 m = moveAction[hand].axis;
@@ -70,7 +68,7 @@ public class CreateShield : MonoBehaviour
 
                 curAngle = Mathf.Round(Vector2.SignedAngle(startPos, m) * (-100f))/100f;
                 curAngle = (curAngle >= 0) ? curAngle : curAngle + 360f;
-                if (Mathf.Abs(curAngle - startAngle) >= 4)
+                if (Mathf.Abs(curAngle - startAngle) >= maxAngleDiff)
                 {
                     Debug.Log("Erro: diferenca de angulos = " + Mathf.Abs(curAngle - startAngle));
                     failed = true;
@@ -102,17 +100,17 @@ public class CreateShield : MonoBehaviour
             {
                 if (success && !failed)
                 {
-                    if (joint == null)
-                    {
-                        Debug.Log("Criando escudo...");
-                        GameObject shield = GameObject.Instantiate(prefab);
-                        shield.transform.position = attachPoint.transform.position;
+                    Debug.Log("Criando escudo...");
+                    GameObject shield = GameObject.Instantiate(prefab);
+                    shield.transform.parent = attachPoint.transform;
+                    shield.transform.localPosition = new Vector3(-0.05f, -0.03f, -0.09f);
+                    shield.transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 45));
 
-                        joint = shield.AddComponent<FixedJoint>();
-                        joint.connectedBody = attachPoint;
-                        Debug.Log("Escudo criado!");
-                    }
+                    //joint = shield.AddComponent<FixedJoint>();
+                    //joint.connectedBody = attachPoint;
+                    Debug.Log("Escudo criado!");
                 }
+
                 Debug.Log("Resetando parametros...");
                 storeStart = true;
                 success = false;
@@ -120,8 +118,12 @@ public class CreateShield : MonoBehaviour
                 startAngle = 0f;
             }
         }
-            
-        
+
+        if (failed)
+        {
+            Debug.Log("VIBRATE!");
+            SteamVR_Actions.default_Haptic[SteamVR_Input_Sources.RightHand].Execute(0, 1.5f, 10, 1);
+        }
     }
 
     private void storeStartPos(Vector2 pos)
