@@ -2,7 +2,7 @@ using UnityEngine;
 using Valve.VR.Extras;
 using Valve.VR;
 
-public class ThrowFireball : MonoBehaviour
+public class LeftController : MonoBehaviour
 {
     public GameObject prefab;
     public Rigidbody attachPoint;
