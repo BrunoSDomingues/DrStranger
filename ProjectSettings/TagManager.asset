@@ -10,6 +10,11 @@ TagManager:
   - Hint1
   - Hint2
   - Hint3
+  - Floor
+  - Wall
+  - Canvas
+  - Shield
+  - Laser
   layers:
   - Default
   - TransparentFX
