@@ -7,10 +7,12 @@ public class LeftController : MonoBehaviour
     public GameObject prefab;
     public Rigidbody attachPoint;
 
-    public SteamVR_Action_Boolean botao = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("InteractUI");
+    public SteamVR_Action_Boolean trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("InteractUI");
+    public SteamVR_Action_Boolean grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
 
     SteamVR_Behaviour_Pose trackedObj;
     FixedJoint joint = null;
+    public static bool detectGesture = false;
 
     private void Awake()
     {
@@ -19,8 +21,7 @@ public class LeftController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        //Criar e prende objeto na mão do usuário
-        if (joint == null && botao.GetStateDown(trackedObj.inputSource))
+        if (joint == null && trigger.GetStateDown(trackedObj.inputSource))
         {
             GameObject go = GameObject.Instantiate(prefab);
             go.transform.position = attachPoint.transform.position;
@@ -28,8 +29,7 @@ public class LeftController : MonoBehaviour
             joint = go.AddComponent<FixedJoint>();
             joint.connectedBody = attachPoint;
         }
-        // Lança o objeto
-        else if (joint != null && botao.GetStateUp(trackedObj.inputSource))
+        else if (joint != null && trigger.GetStateUp(trackedObj.inputSource))
         {
             GameObject go = joint.gameObject;
             Rigidbody rigidbody = go.GetComponent<Rigidbody>();
@@ -48,6 +48,11 @@ public class LeftController : MonoBehaviour
                 rigidbody.angularVelocity = trackedObj.GetAngularVelocity();
             }
             rigidbody.maxAngularVelocity = rigidbody.angularVelocity.magnitude;
+        }
+        if (grip.GetStateDown(trackedObj.inputSource))
+        {
+            SteamVR_Actions.default_Haptic[SteamVR_Input_Sources.LeftHand].Execute(0, 0.5f, 10, 1);
+            detectGesture = !detectGesture;
         }
     }
 }
