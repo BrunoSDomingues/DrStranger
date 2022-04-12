@@ -176,8 +176,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefab: {fileID: 6953785442370138750, guid: d16352ec00096284f8f1f13f4852d229, type: 3}
   attachPoint: {fileID: 677749602}
-  botao:
+  trigger:
     actionPath: /actions/default/in/InteractUI
+    needsReinit: 0
+  grip:
+    actionPath: /actions/default/in/GrabGrip
     needsReinit: 0
 --- !u!1001 &333483102
 PrefabInstance:
@@ -1008,6 +1011,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
+--- !u!4 &1465511066 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 485514, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
+  m_PrefabInstance: {fileID: 1465511065}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1467210933 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 160596, guid: dc06161b6d97feb419f45f03b62e14b9, type: 3}
@@ -1025,8 +1033,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 194316de48ea22a49b0b9cbcf333b11c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  button:
+  grip:
     actionPath: /actions/default/in/GrabGrip
+    needsReinit: 0
+  trigger:
+    actionPath: /actions/default/in/InteractUI
     needsReinit: 0
   actionSet:
     actionSetPath: /actions/default
@@ -1034,8 +1045,12 @@ MonoBehaviour:
     actionPath: /actions/default/in/TouchpadPosition
     needsReinit: 0
   hand: 2
-  prefab: {fileID: 2400500852832826293, guid: f98098b152e47814699eb540b2af695f, type: 3}
+  creationMode: 0
+  newGestureName: 
+  movementSource: {fileID: 1465511066}
+  shieldPrefab: {fileID: 2400500852832826293, guid: f98098b152e47814699eb540b2af695f, type: 3}
   attachPoint: {fileID: 1467210933}
+  shapePrefab: {fileID: 2042067611116304033, guid: 964670cda44063641bebeafc068675b5, type: 3}
 --- !u!1001 &1648634928
 PrefabInstance:
   m_ObjectHideFlags: 0
