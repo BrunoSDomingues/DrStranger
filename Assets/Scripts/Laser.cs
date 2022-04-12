@@ -9,11 +9,11 @@ public class Laser : MonoBehaviour
 
     private float offsetX = 0.4f, offsetY = 0.7f, offsetZ = 1.6f;
     private Vector3 speed;
+    public static float multiplier = 1000f;
 
     // Start is called before the first frame update
     void Start()
     {
-        speed = transform.forward * 1000;
         StartCoroutine(FireLaser());
     }
 
@@ -22,6 +22,7 @@ public class Laser : MonoBehaviour
     {
         while (true)
         {
+            speed = transform.forward * multiplier;
             bullet = Instantiate(
                 prefab, 
                 new Vector3(
