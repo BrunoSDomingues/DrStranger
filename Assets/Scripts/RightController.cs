@@ -7,47 +7,40 @@ using PDollarGestureRecognizer;
 
 public class RightController : MonoBehaviour
 {
+    // GameManager
+    GameManager gm;
+
     // SteamVR
     public SteamVR_Action_Boolean grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
     public SteamVR_Action_Boolean trigger = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("InteractUI");
     SteamVR_Behaviour_Pose trackedObj;
     public SteamVR_ActionSet actionSet;
-    public SteamVR_Action_Vector2 moveAction;
-    public SteamVR_Input_Sources hand;
 
-    // Shield flags
-    private bool shieldOK = false;
-    private bool shieldFail = false;
+    // Flags
+    private bool detectGesture = false;
     private bool gripPressed = false;
-    private bool storeStart = true;
-
-    // Gesture flags
     private bool triggerPressed = false;
     private bool isMoving = false;
-    public bool creationMode = true;
+    public bool creationMode = false;
 
     // Strings
     public string newGestureName;
     private string filePath;
-    private string expectedGesture = "Circle";
-
-    // Vectors
-    private Vector2 startPos;
+    private string circleGesture = "Circle", xGesture = "X";
 
     // Transform
     public Transform movementSource;
 
     // Float values
-    private float startAngle = 0f, curAngle, maxAngleDiff = 7f;
-    private float minRadius;
     private float distanceThreshold = 0.02f;
-    private float detectionThreshold = 0.9f;
+    private float detectionThreshold = 0.8f;
+    private float shortVib = 0.5f, longVib = 1.5f;
 
     // GameObjects
     public GameObject shieldPrefab;
     public GameObject attachPoint;
     public GameObject shapePrefab;
-    private GameObject tempShape;
+    private GameObject tempShape, shield;
 
     // Lists
     private List<Vector3> positionList = new List<Vector3>();
@@ -61,9 +54,7 @@ public class RightController : MonoBehaviour
 
     private void Start()
     {
-        minRadius = 0.5f;
-        actionSet.Activate(hand);
-        string[] gestureFiles = Directory.GetFiles(Application.dataPath, "*.xml");
+        string[] gestureFiles = Directory.GetFiles(Application.dataPath + "/XML", "*.xml");
         foreach (var item in gestureFiles)
         {
             gestures.Add(GestureIO.ReadGestureFromFile(item));
@@ -74,156 +65,38 @@ public class RightController : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        gripPressed = grip.GetState(trackedObj.inputSource);
-        triggerPressed = trigger.GetState(trackedObj.inputSource);
-
-        switch (LeftController.detectGesture)
+        gripPressed = grip.GetStateDown(trackedObj.inputSource);
+        triggerPressed = trigger.GetState(trackedObj.inputSource);       
+        
+        // If grip button is pressed, switch between drawing mode/interaction mode
+        if (gripPressed)
         {
-            case (true):
-                if (triggerPressed && !isMoving)
-                {
-                    StartGesture();
-                }
-                else if (!triggerPressed && isMoving)
-                {
-                    EndGesture();
-                }
-                else if (triggerPressed && isMoving)
-                {
-                    UpdateGesture();
-                }
-                    
-                break;
-
-            case (false):
-                if (gripPressed && !shieldOK && !shieldFail)
-                {
-                    // Destroys previous shield when pressing button again
-                    DestroyShield();
-
-                    // Stores hand
-                    Vector2 m = moveAction[hand].axis;
-
-                    // Stores the starting position of the circle
-                    storeStartPos(m);
-
-                    // Checks if the shield was drawn correctly
-                    CheckShield(m);
-                }
-
-                else if (!gripPressed)
-                {
-                    // Handler for when player releases button
-                    GripRelease(grip);
-                }
-
-                if (shieldFail)
-                {
-                    Debug.Log("VIBRATE!");
-                    SteamVR_Actions.default_Haptic[SteamVR_Input_Sources.RightHand].Execute(0, 1.5f, 10, 1);
-                }
-
-                break;
+            detectGesture = !detectGesture;
+            VibrateController(shortVib);
+            if (!detectGesture) StartCoroutine(Delay(1.5f));
         }
-    }
-
-    void DestroyShield()
-    {
-        // Checks if the previous shield has failed or if the player was not shieldOKful
-        if (!shieldOK || shieldFail)
+        
+        if (detectGesture)
         {
-            // Looks for shield, and if it exists, destroys it
-            GameObject shield = GameObject.FindWithTag("Shield");
-            if (shield != null)
+            if (triggerPressed && !isMoving)
             {
-                Destroy(shield);
-                Debug.Log("Destruindo escudo previo...");
+                StartGesture();
             }
-        }
-    }
-
-    void CheckShield(Vector2 pos)
-    {
-        float radius = Mathf.Sqrt(Mathf.Pow(pos.x, 2.0f) + Mathf.Pow(pos.y, 2.0f));
-
-        // If inside the minimum radius
-        if (radius > minRadius)
-        {
-            // Calculates angle between starting and current position
-            curAngle = Mathf.Round(Vector2.SignedAngle(startPos, pos) * (-100f)) / 100f;
-            curAngle = (curAngle >= 0) ? curAngle : curAngle + 360f;
-
-            // Checks if angle difference is too big
-            if (Mathf.Abs(curAngle - startAngle) >= maxAngleDiff)
+            else if (!triggerPressed && isMoving)
             {
-                Debug.Log("Erro: diferenca de angulos = " + Mathf.Abs(curAngle - startAngle));
-                shieldFail = true;
+                EndGesture();
             }
-
-            else
+            else if (triggerPressed && isMoving)
             {
-                Debug.Log("Direcao certa!");
-
-                // Full circle
-                if (curAngle >= 358)
-                {
-                    Debug.Log("Escudo completo!");
-                    shieldOK = true;
-                }
-
-                startAngle = curAngle;
+                UpdateGesture();
             }
-        }
-        else
-        {
-            Debug.Log("Erro: raio do circulo muito pequeno!");
-            shieldFail = true;
-        }
-    }
-
-    void GripRelease(SteamVR_Action_Boolean but)
-    {
-        if (but.GetStateUp(trackedObj.inputSource))
-        {
-            if (shieldOK && !shieldFail)
-            {
-                Debug.Log("Criando escudo...");
-
-                // Instantiates shield
-                GameObject shield = GameObject.Instantiate(shieldPrefab);
-
-                // Sets shield as child of hand
-                shield.transform.parent = attachPoint.transform;
-
-                // Sets localPosition and localRotation
-                shield.transform.localPosition = new Vector3(-0.05f, -0.03f, -0.09f);
-                shield.transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 45));
-
-                Debug.Log("Escudo criado!");
-            }
-
-            // Resets parameters
-            Debug.Log("Resetando parametros...");
-            storeStart = true;
-            shieldOK = false;
-            shieldFail = false;
-            startAngle = 0f;
-        }
-    }
-
-    private void storeStartPos(Vector2 pos)
-    {
-        if (storeStart)
-        {
-            startPos = pos;
-            storeStart = false;
         }
     }
 
     void StartGesture()
     {
         isMoving = true;
-        Debug.Log("1");
+        Debug.Log("Started gesture");
         positionList.Clear();
         positionList.Add(movementSource.position);
         tempShape = Instantiate(shapePrefab, movementSource.position, Quaternion.identity);
@@ -233,7 +106,7 @@ public class RightController : MonoBehaviour
     void EndGesture()
     {
         isMoving = false;
-        Debug.Log("2");
+        Debug.Log("Ended gesture");
 
         Point[] pointArray = new Point[positionList.Count];
         for (int i = 0; i < positionList.Count; i++)
@@ -249,24 +122,54 @@ public class RightController : MonoBehaviour
             gesture.Name = newGestureName;
             gestures.Add(gesture);
 
-            filePath = Application.dataPath + "/" + newGestureName + ".xml";
+            filePath = Application.dataPath + "/XML/" + newGestureName + ".xml";
             GestureIO.WriteGesture(pointArray, newGestureName, filePath);
         }
         else
         {
-            Result result = PointCloudRecognizer.Classify(gesture, gestures.ToArray());
-            if (result.GestureClass == expectedGesture && result.Score > detectionThreshold)
+            // Checks if a previous shield exists, and if yes, destroys it
+            shield = GameObject.FindWithTag("Shield");
+            if (shield) Destroy(shield);
+
+            if (positionList.Count > 1)
             {
-                Debug.Log("CIRCLE!");
-                StartCoroutine(StopTime());
+                Result result = PointCloudRecognizer.Classify(gesture, gestures.ToArray());
+
+                // Checks if result score is above threshold
+                if (result.Score > detectionThreshold)
+                {
+                    string detectedGesture = result.GestureClass;
+
+                    if (detectedGesture == circleGesture)
+                    {
+                        // Instantiates new shield
+                        shield = GameObject.Instantiate(shieldPrefab);
+                        if (gm.tutorialStates.Contains(gm.gameState)) gm.tutorialCounter++;
+
+                        // Sets shield as child of hand
+                        shield.transform.parent = attachPoint.transform;
+
+                        // Sets localPosition and localRotation
+                        shield.transform.localPosition = new Vector3(-0.05f, -0.03f, -0.09f);
+                        shield.transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 45));
+                    }
+                    else if (detectedGesture == xGesture && LevelHandler.loadedTurrets)
+                    {
+                        Debug.Log("X!");
+                        StartCoroutine(StopTime());
+                    }
+                    else VibrateController(longVib);
+                }
+                else VibrateController(longVib);    
             }
-            foreach (GameObject shape in shapes) Destroy(shape);
+            else VibrateController(longVib);
+            StartCoroutine(DestroyDrawing(1.5f));
         }
     }
 
     void UpdateGesture()
     {
-        Debug.Log("3");
+        Debug.Log("Updating gesture");
         Vector3 lastPosition = positionList[positionList.Count - 1];
         if (Vector3.Distance(movementSource.position, lastPosition) > distanceThreshold)
         {
@@ -276,10 +179,28 @@ public class RightController : MonoBehaviour
         }
     }
 
+    void VibrateController(float duration)
+    {
+        SteamVR_Actions.default_Haptic[SteamVR_Input_Sources.RightHand].Execute(0, duration, 10, 1);
+    }
+
     IEnumerator StopTime()
     {
-        Laser.multiplier = 0;
-        yield return new WaitForSeconds(5);
-        Laser.multiplier = 1000;
+        Laser.timeStop = true;
+        yield return new WaitForSecondsRealtime(5f);
+        Laser.timeStop = false;
+        if (gm.tutorialStates.Contains(gm.gameState)) gm.tutorialCounter++;
+    }
+
+    IEnumerator Delay(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        VibrateController(shortVib);
+    }
+
+    IEnumerator DestroyDrawing(float seconds)
+    {
+        yield return new WaitForSecondsRealtime(seconds);
+        foreach (GameObject shape in shapes) Destroy(shape);
     }
 }

@@ -4,6 +4,7 @@ using Valve.VR;
 
 public class LeftController : MonoBehaviour
 {
+    GameManager gm;
     public GameObject prefab;
     public Rigidbody attachPoint;
 
@@ -12,7 +13,6 @@ public class LeftController : MonoBehaviour
 
     SteamVR_Behaviour_Pose trackedObj;
     FixedJoint joint = null;
-    public static bool detectGesture = false;
 
     private void Awake()
     {
@@ -24,6 +24,7 @@ public class LeftController : MonoBehaviour
         if (joint == null && trigger.GetStateDown(trackedObj.inputSource))
         {
             GameObject go = GameObject.Instantiate(prefab);
+            if (gm.tutorialStates.Contains(gm.gameState)) gm.tutorialCounter++;
             go.transform.position = attachPoint.transform.position;
 
             joint = go.AddComponent<FixedJoint>();
@@ -48,11 +49,6 @@ public class LeftController : MonoBehaviour
                 rigidbody.angularVelocity = trackedObj.GetAngularVelocity();
             }
             rigidbody.maxAngularVelocity = rigidbody.angularVelocity.magnitude;
-        }
-        if (grip.GetStateDown(trackedObj.inputSource))
-        {
-            SteamVR_Actions.default_Haptic[SteamVR_Input_Sources.LeftHand].Execute(0, 0.5f, 10, 1);
-            detectGesture = !detectGesture;
         }
     }
 }
