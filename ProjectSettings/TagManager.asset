@@ -15,6 +15,9 @@ TagManager:
   - Canvas
   - Shield
   - Laser
+  - Hint2_5
+  - End
+  - Hint4
   layers:
   - Default
   - TransparentFX
