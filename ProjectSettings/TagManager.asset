@@ -5,19 +5,16 @@ TagManager:
   serializedVersion: 2
   tags:
   - Sphere
-  - Crate
   - Turret
+  - Floor
+  - Wall
+  - Shield
+  - Laser
+  - StartTutorial
   - Hint1
   - Hint2
   - Hint3
-  - Floor
-  - Wall
-  - Canvas
-  - Shield
-  - Laser
-  - Hint2_5
-  - End
-  - Hint4
+  - EndTutorial
   layers:
   - Default
   - TransparentFX
