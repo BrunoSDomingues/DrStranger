@@ -7,8 +7,6 @@ using PDollarGestureRecognizer;
 
 public class RightController : MonoBehaviour
 {
-    // GameManager
-    GameManager gm;
 
     // SteamVR
     public SteamVR_Action_Boolean grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
@@ -143,8 +141,7 @@ public class RightController : MonoBehaviour
                     if (detectedGesture == circleGesture)
                     {
                         // Instantiates new shield
-                        shield = GameObject.Instantiate(shieldPrefab);
-                        if (gm.tutorialStates.Contains(gm.gameState)) gm.tutorialCounter++;
+                        shield = GameObject.Instantiate(shieldPrefab);                    
 
                         // Sets shield as child of hand
                         shield.transform.parent = attachPoint.transform;
@@ -189,7 +186,6 @@ public class RightController : MonoBehaviour
         Laser.timeStop = true;
         yield return new WaitForSecondsRealtime(5f);
         Laser.timeStop = false;
-        if (gm.tutorialStates.Contains(gm.gameState)) gm.tutorialCounter++;
     }
 
     IEnumerator Delay(float seconds)

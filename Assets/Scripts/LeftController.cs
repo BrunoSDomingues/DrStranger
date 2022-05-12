@@ -4,7 +4,6 @@ using Valve.VR;
 
 public class LeftController : MonoBehaviour
 {
-    GameManager gm;
     public GameObject prefab;
     public Rigidbody attachPoint;
 
@@ -23,8 +22,7 @@ public class LeftController : MonoBehaviour
     {
         if (joint == null && trigger.GetStateDown(trackedObj.inputSource))
         {
-            GameObject go = GameObject.Instantiate(prefab);
-            if (gm.tutorialStates.Contains(gm.gameState)) gm.tutorialCounter++;
+            GameObject go = Instantiate(prefab);
             go.transform.position = attachPoint.transform.position;
 
             joint = go.AddComponent<FixedJoint>();
