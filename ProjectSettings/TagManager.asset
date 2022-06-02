@@ -15,6 +15,9 @@ TagManager:
   - Hint2
   - Hint3
   - EndTutorial
+  - Choose1
+  - Choose2
+  - LaserSpawn
   layers:
   - Default
   - TransparentFX
