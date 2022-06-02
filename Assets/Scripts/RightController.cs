@@ -5,8 +5,7 @@ using UnityEngine;
 using Valve.VR;
 using PDollarGestureRecognizer;
 
-public class RightController : MonoBehaviour
-{
+public class RightController : MonoBehaviour {
 
     // SteamVR
     public SteamVR_Action_Boolean grip = SteamVR_Input.GetAction<SteamVR_Action_Boolean>("GrabGrip");
@@ -45,54 +44,44 @@ public class RightController : MonoBehaviour
     private List<GameObject> shapes = new List<GameObject>();
     private List<Gesture> gestures = new List<Gesture>();
 
-    private void Awake()
-    {
+    private void Awake() {
         trackedObj = GetComponent<SteamVR_Behaviour_Pose>();
     }
 
-    private void Start()
-    {
+    private void Start() {
         string[] gestureFiles = Directory.GetFiles(Application.dataPath + "/XML", "*.xml");
-        foreach (var item in gestureFiles)
-        {
+        foreach (var item in gestureFiles) {
             gestures.Add(GestureIO.ReadGestureFromFile(item));
         }
     }
 
 
     // Update is called once per frame
-    private void Update()
-    {
+    private void Update() {
         gripPressed = grip.GetStateDown(trackedObj.inputSource);
-        triggerPressed = trigger.GetState(trackedObj.inputSource);       
-        
+        triggerPressed = trigger.GetState(trackedObj.inputSource);
+
         // If grip button is pressed, switch between drawing mode/interaction mode
-        if (gripPressed)
-        {
+        if (gripPressed) {
             detectGesture = !detectGesture;
             VibrateController(shortVib);
             if (!detectGesture) StartCoroutine(Delay(1.5f));
         }
-        
-        if (detectGesture)
-        {
-            if (triggerPressed && !isMoving)
-            {
+
+        if (detectGesture) {
+            if (triggerPressed && !isMoving) {
                 StartGesture();
             }
-            else if (!triggerPressed && isMoving)
-            {
+            else if (!triggerPressed && isMoving) {
                 EndGesture();
             }
-            else if (triggerPressed && isMoving)
-            {
+            else if (triggerPressed && isMoving) {
                 UpdateGesture();
             }
         }
     }
 
-    void StartGesture()
-    {
+    void StartGesture() {
         isMoving = true;
         Debug.Log("Started gesture");
         positionList.Clear();
@@ -101,47 +90,40 @@ public class RightController : MonoBehaviour
         shapes.Add(tempShape);
     }
 
-    void EndGesture()
-    {
+    void EndGesture() {
         isMoving = false;
         Debug.Log("Ended gesture");
 
         Point[] pointArray = new Point[positionList.Count];
-        for (int i = 0; i < positionList.Count; i++)
-        {
+        for (int i = 0; i < positionList.Count; i++) {
             Vector2 screenPoint = Camera.main.WorldToScreenPoint(positionList[i]);
             pointArray[i] = new Point(screenPoint.x, screenPoint.y, 0);
         }
 
         Gesture gesture = new Gesture(pointArray);
 
-        if (creationMode)
-        {
+        if (creationMode) {
             gesture.Name = newGestureName;
             gestures.Add(gesture);
 
             filePath = Application.dataPath + "/XML/" + newGestureName + ".xml";
             GestureIO.WriteGesture(pointArray, newGestureName, filePath);
         }
-        else
-        {
+        else {
             // Checks if a previous shield exists, and if yes, destroys it
             shield = GameObject.FindWithTag("Shield");
             if (shield) Destroy(shield);
 
-            if (positionList.Count > 1)
-            {
+            if (positionList.Count > 1) {
                 Result result = PointCloudRecognizer.Classify(gesture, gestures.ToArray());
 
                 // Checks if result score is above threshold
-                if (result.Score > detectionThreshold)
-                {
+                if (result.Score > detectionThreshold) {
                     string detectedGesture = result.GestureClass;
 
-                    if (detectedGesture == circleGesture)
-                    {
+                    if (detectedGesture == circleGesture) {
                         // Instantiates new shield
-                        shield = GameObject.Instantiate(shieldPrefab);                    
+                        shield = GameObject.Instantiate(shieldPrefab);
 
                         // Sets shield as child of hand
                         shield.transform.parent = attachPoint.transform;
@@ -150,52 +132,48 @@ public class RightController : MonoBehaviour
                         shield.transform.localPosition = new Vector3(-0.05f, -0.03f, -0.09f);
                         shield.transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 45));
                     }
-                    else if (detectedGesture == xGesture && LevelHandler.loadedTurrets)
-                    {
+                    else if (detectedGesture == xGesture) {
                         Debug.Log("X!");
                         StartCoroutine(StopTime());
                     }
                     else VibrateController(longVib);
                 }
-                else VibrateController(longVib);    
+                else VibrateController(longVib);
             }
             else VibrateController(longVib);
             StartCoroutine(DestroyDrawing(1.5f));
         }
     }
 
-    void UpdateGesture()
-    {
+    void UpdateGesture() {
         Debug.Log("Updating gesture");
         Vector3 lastPosition = positionList[positionList.Count - 1];
-        if (Vector3.Distance(movementSource.position, lastPosition) > distanceThreshold)
-        {
+        if (Vector3.Distance(movementSource.position, lastPosition) > distanceThreshold) {
             positionList.Add(movementSource.position);
             tempShape = Instantiate(shapePrefab, movementSource.position, Quaternion.identity);
             shapes.Add(tempShape);
         }
     }
 
-    void VibrateController(float duration)
-    {
+    void VibrateController(float duration) {
         SteamVR_Actions.default_Haptic[SteamVR_Input_Sources.RightHand].Execute(0, duration, 10, 1);
     }
 
-    IEnumerator StopTime()
-    {
+    IEnumerator StopTime() {
+        Debug.Log("parei tempo!");
         Laser.timeStop = true;
         yield return new WaitForSecondsRealtime(5f);
+        Debug.Log("Voltei tempo!");
+
         Laser.timeStop = false;
     }
 
-    IEnumerator Delay(float seconds)
-    {
+    IEnumerator Delay(float seconds) {
         yield return new WaitForSecondsRealtime(seconds);
         VibrateController(shortVib);
     }
 
-    IEnumerator DestroyDrawing(float seconds)
-    {
+    IEnumerator DestroyDrawing(float seconds) {
         yield return new WaitForSecondsRealtime(seconds);
         foreach (GameObject shape in shapes) Destroy(shape);
     }
