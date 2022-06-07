@@ -18,6 +18,7 @@ TagManager:
   - Choose1
   - Choose2
   - LaserSpawn
+  - Flames
   layers:
   - Default
   - TransparentFX
