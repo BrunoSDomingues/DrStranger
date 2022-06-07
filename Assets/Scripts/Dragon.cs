@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class Dragon : MonoBehaviour
 {
-
     Animator m_Animator;
     private GameObject player;
+    private ParticleSystem flameParticles;
     private int dragonLife, dragonAction;
     private bool startAnimations = true, isDead = false;
 
@@ -15,6 +15,7 @@ public class Dragon : MonoBehaviour
     {
         m_Animator = gameObject.GetComponent<Animator>();
         player = GameObject.FindWithTag("Player");
+        flameParticles = GameObject.FindGameObjectWithTag("Flames").GetComponent<ParticleSystem>();
         dragonLife = 3;
         m_Animator.SetTrigger("sleep");
 
@@ -27,9 +28,9 @@ public class Dragon : MonoBehaviour
     }
 
     private void hit()
-    {   
+    {
         dragonLife--;
-        StartCoroutine(action("takeDmg"));
+        StartCoroutine(action("takeDmg", false));
 
         if (dragonLife <= 0)
         {
@@ -46,11 +47,11 @@ public class Dragon : MonoBehaviour
         float dist = Vector3.Distance(player.transform.position, transform.position);
         if (dist < 50)
         {
-            if (startAnimations) {
-                StartCoroutine(startFight());
+            if (startAnimations)
+            {
                 startAnimations = !startAnimations;
+                StartCoroutine(startFight());
             }
-            StartCoroutine(fight());
         }
     }
 
@@ -59,34 +60,43 @@ public class Dragon : MonoBehaviour
         m_Animator.SetTrigger("scream");
         m_Animator.SetTrigger("startFight");
         m_Animator.ResetTrigger("sleep");
-        yield return new WaitForSeconds(4);
+        yield return new WaitForSeconds(7);
         m_Animator.ResetTrigger("scream");
         m_Animator.ResetTrigger("startFight");
-        yield break;
+        yield return StartCoroutine(fight());
     }
 
     IEnumerator fight()
     {
+        Debug.Log("AAAAAAA");
         dragonAction = Random.Range(1, 3);
         switch (dragonAction)
         {
             case 1:
-                StartCoroutine(action("flameAttack"));
+                StartCoroutine(action("flameAttack", true));
                 break;
             case 2:
-                StartCoroutine(action("defend"));
+                StartCoroutine(action("defend", false));
                 break;
             default:
-                StartCoroutine(action("flameAttack"));
+                StartCoroutine(action("flameAttack", true));
                 break;
         }
-        yield return new WaitForSeconds(7);
+        yield return new WaitForSeconds(5);
+        StartCoroutine(fight());
     }
 
-    IEnumerator action(string trigger)
+    IEnumerator action(string trigger, bool flames)
     {
+        Debug.Log("Called action " + trigger);
         m_Animator.SetTrigger(trigger);
-        yield return new WaitForSeconds(5);
+        if (flames) flameParticles.Play();
+        yield return new WaitForSeconds(3f);
+        if (flames)
+        {
+            flameParticles.Stop();
+            flameParticles.Clear();
+        }
         m_Animator.ResetTrigger(trigger);
     }
 }
