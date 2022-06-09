@@ -19,6 +19,8 @@ TagManager:
   - Choose2
   - LaserSpawn
   - Flames
+  - projectile
+  - gm
   layers:
   - Default
   - TransparentFX
