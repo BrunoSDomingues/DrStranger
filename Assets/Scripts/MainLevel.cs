@@ -4,14 +4,24 @@ using UnityEngine;
 
 public class MainLevel : MonoBehaviour
 {
+    public static MainLevel Instance { get; private set; }
+    
     private int lifes;
+    public bool pauseTime;
 
-
-
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
         lifes = 3;       
+    }
+
+    public void setPause()
+    {
+        pauseTime = !pauseTime;
     }
 
     private void hit() {

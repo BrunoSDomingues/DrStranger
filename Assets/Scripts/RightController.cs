@@ -161,11 +161,10 @@ public class RightController : MonoBehaviour {
 
     IEnumerator StopTime() {
         Debug.Log("parei tempo!");
-        Laser.timeStop = true;
+        MainLevel.Instance.setPause();
         yield return new WaitForSecondsRealtime(5f);
         Debug.Log("Voltei tempo!");
-
-        Laser.timeStop = false;
+        MainLevel.Instance.setPause();
     }
 
     IEnumerator Delay(float seconds) {

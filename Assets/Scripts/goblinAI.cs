@@ -4,14 +4,12 @@ using UnityEngine;
 
 public class goblinAI : MonoBehaviour {
     private int life;
-    private GameObject player;
-
+    private GameObject player, gm;
     private Animation anim;
 
-    void Start() {
+    void Start() { 
         life = 3;
         anim = gameObject.GetComponent<Animation>();
-
         player = GameObject.FindWithTag("Player");
 
     }
@@ -25,16 +23,17 @@ public class goblinAI : MonoBehaviour {
         if (life <= 0) Destroy(gameObject);
     }
 
-
-    // Update is called once per frame
     void FixedUpdate() {
-        float dist = Vector3.Distance(player.transform.position, transform.position);
-        if (dist <= 3) {
-            anim.Play("attack1");
-        }
-        else {
-            anim.Play("idle");
+        anim.enabled = !MainLevel.Instance.pauseTime;
+        if (!MainLevel.Instance.pauseTime) {
+            float dist = Vector3.Distance(player.transform.position, transform.position);
+            if (dist <= 5) {
+                anim.Play("attack1");
+            }
+            else {
+                anim.Play("idle");
 
+            }
         }
     }
 }

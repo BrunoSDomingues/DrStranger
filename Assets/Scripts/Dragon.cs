@@ -44,14 +44,24 @@ public class Dragon : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float dist = Vector3.Distance(player.transform.position, transform.position);
-        if (dist < 50)
+        m_Animator.speed = MainLevel.Instance.pauseTime ? 0 : 1;
+        Debug.Log("Animator speed is " + m_Animator.speed);
+        if (!MainLevel.Instance.pauseTime)
         {
-            if (startAnimations)
+            float dist = Vector3.Distance(player.transform.position, transform.position);
+            if (dist < 50)
             {
-                startAnimations = !startAnimations;
-                StartCoroutine(startFight());
-            }
+                if (startAnimations)
+                {
+                    startAnimations = !startAnimations;
+                    StartCoroutine(startFight());
+                }
+            } 
+        }
+        if (MainLevel.Instance.pauseTime && flameParticles.isPlaying)
+        {
+            Debug.Log("PAUSE FLAMES");
+            flameParticles.Pause();
         }
     }
 
@@ -68,7 +78,6 @@ public class Dragon : MonoBehaviour
 
     IEnumerator fight()
     {
-        Debug.Log("AAAAAAA");
         dragonAction = Random.Range(1, 3);
         switch (dragonAction)
         {
@@ -89,14 +98,19 @@ public class Dragon : MonoBehaviour
     IEnumerator action(string trigger, bool flames)
     {
         Debug.Log("Called action " + trigger);
+
         m_Animator.SetTrigger(trigger);
+        Debug.Log("Called flame PLAY!");
         if (flames) flameParticles.Play();
         yield return new WaitForSeconds(3f);
         if (flames)
         {
+            Debug.Log("Called flame STOP!");
             flameParticles.Stop();
+            Debug.Log("Called flame CLEAR!");
             flameParticles.Clear();
         }
         m_Animator.ResetTrigger(trigger);
+        
     }
 }
